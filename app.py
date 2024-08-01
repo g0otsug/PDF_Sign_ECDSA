@@ -2,7 +2,8 @@ import streamlit as st
 import firebase_admin
 from firebase_admin import auth
 from firebase_config import cred
-import hashlib
+from ecdsa import SigningKey, VerifyingKey
+from scripts.ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -12,18 +13,23 @@ def sign_up(email, password):
     try:
         user = auth.create_user(email=email, password=password)
         return user.uid
-    except:
-        st.error("Sign up failed")
-        return None
+    except firebase_admin._auth_utils.EmailAlreadyExistsError:
+        st.error("Email already exists")
+    except Exception as e:
+        st.error(f"Sign up failed: {str(e)}")
+    return None
 
 def sign_in(email, password):
     try:
         user = auth.get_user_by_email(email)
         # In a real application, you would use Firebase Authentication SDK to verify the password
+        # Firebase Admin SDK doesn't support password verification directly
         return user.uid
-    except:
-        st.error("Sign in failed")
-        return None
+    except firebase_admin._auth_utils.UserNotFoundError:
+        st.error("User not found")
+    except Exception as e:
+        st.error(f"Sign in failed: {str(e)}")
+    return None
 
 def main():
     st.title("ECDSA Document Signing")
