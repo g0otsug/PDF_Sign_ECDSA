@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
-from scripts.ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
+from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 
 # Initialize Firebase
 if not firebase_admin._apps:
