@@ -1,5 +1,5 @@
 import streamlit as st
-from scripts.ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
+from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 from ecdsa import SigningKey, VerifyingKey, SECP256k1
 
 def main():
