@@ -22,7 +22,7 @@ def sign_up(email, password):
 def sign_in(email, password):
     try:
         user = auth.get_user_by_email(email)
-        # In a real application, you would use Firebase Authentication SDK to verify the password
+        # Note: In a real application, you would use Firebase Authentication SDK to verify the password
         # Firebase Admin SDK doesn't support password verification directly
         return user.uid
     except firebase_admin._auth_utils.UserNotFoundError:
