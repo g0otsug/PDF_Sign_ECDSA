@@ -76,7 +76,8 @@ def main():
         if choice == "Logout":
             st.session_state.logged_in = False
             st.experimental_set_query_params(logged_in=False)
-            st.experimental_rerun()
+            if st.button("Next"):
+                        st.experimental_rerun()
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
