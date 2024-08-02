@@ -63,7 +63,7 @@ def main():
                     st.success(f"Welcome {email}")
                     st.session_state.logged_in = True
                     st.session_state.user_uid = user_uid
-                    st.experimental_rerun()  # Reload the page to show the app menu
+                    st.experimental_set_query_params(logged_in=True)
 
     else:
         menu = ["Key Generation", "Sign Document", "Verify Document", "Logout"]
@@ -71,8 +71,8 @@ def main():
 
         if choice == "Logout":
             st.session_state.logged_in = False
+            st.experimental_set_query_params(logged_in=False)
             st.success("You have been logged out")
-            st.experimental_rerun()  # Reload the page to show the login menu
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
