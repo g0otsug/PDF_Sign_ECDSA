@@ -63,7 +63,7 @@ def main():
                     st.success(f"Welcome {email}")
                     st.session_state.logged_in = True
                     st.session_state.user_uid = user_uid
-                    st.experimental_rerun()  # Refresh the page to go to the main menu
+                     # Refresh the page to go to the main menu
 
     else:
         menu = ["Key Generation", "Sign Document", "Verify Document", "Logout"]
@@ -71,7 +71,7 @@ def main():
 
         if choice == "Logout":
             st.session_state.logged_in = False
-            st.experimental_rerun()  # Refresh the page to go to the login screen
+              # Refresh the page to go to the login screen
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
