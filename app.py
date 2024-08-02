@@ -37,45 +37,44 @@ def main():
     if 'logged_in' not in st.session_state:
         st.session_state.logged_in = False
 
-    menu = ["Home", "SignUp", "Login"]
-    if st.session_state.logged_in:
-        menu = ["Home", "Key Generation", "Sign Document", "Verify Document", "Logout"]
-    choice = st.sidebar.selectbox("Menu", menu)
+    if not st.session_state.logged_in:
+        menu = ["Home", "SignUp", "Login"]
+        choice = st.sidebar.selectbox("Menu", menu)
 
-    if choice == "Home":
-        st.subheader("Home")
+        if choice == "Home":
+            st.subheader("Home")
 
-    elif choice == "SignUp":
-        st.subheader("Create New Account")
-        email = st.text_input("User Email")
-        password = st.text_input("Password", type='password')
-        if st.button("SignUp"):
-            user_uid = sign_up(email, password)
-            if user_uid:
-                st.success(f"Account created for {email}")
+        elif choice == "SignUp":
+            st.subheader("Create New Account")
+            email = st.text_input("User Email")
+            password = st.text_input("Password", type='password')
+            if st.button("SignUp"):
+                user_uid = sign_up(email, password)
+                if user_uid:
+                    st.success(f"Account created for {email}")
 
-    elif choice == "Login":
-        st.subheader("Login")
-        email = st.text_input("User Email")
-        password = st.text_input("Password", type='password')
-        if st.button("Login"):
-            user_uid = sign_in(email, password)
-            if user_uid:
-                st.success(f"Welcome {email}")
-                st.session_state.logged_in = True
-                st.session_state.user_uid = user_uid
-                st.experimental_rerun()
+        elif choice == "Login":
+            st.subheader("Login")
+            email = st.text_input("User Email")
+            password = st.text_input("Password", type='password')
+            if st.button("Login"):
+                user_uid = sign_in(email, password)
+                if user_uid:
+                    st.success(f"Welcome {email}")
+                    st.session_state.logged_in = True
+                    st.session_state.user_uid = user_uid
+                    st.experimental_rerun()  # Reload the page to show the app menu
 
-    elif choice == "Logout":
-        st.session_state.logged_in = False
-        st.success("You have been logged out")
-        st.experimental_rerun()
+    else:
+        menu = ["Key Generation", "Sign Document", "Verify Document", "Logout"]
+        choice = st.sidebar.selectbox("Menu", menu)
 
-    if st.session_state.logged_in:
-        app_menu = ["Key Generation", "Sign Document", "Verify Document"]
-        app_choice = st.sidebar.selectbox("App Menu", app_menu)
+        if choice == "Logout":
+            st.session_state.logged_in = False
+            st.success("You have been logged out")
+            st.experimental_rerun()  # Reload the page to show the login menu
 
-        if app_choice == "Key Generation":
+        elif choice == "Key Generation":
             st.subheader("Key Generation")
             if st.button("Generate Keys"):
                 private_key, public_key = generate_keys()
@@ -97,7 +96,7 @@ def main():
                 st.download_button("Download Public Key (.pem)", public_pem, file_name="public_key.pem")
                 st.download_button("Download Public Key (.txt)", public_pem.decode(), file_name="public_key.txt")
 
-        elif app_choice == "Sign Document":
+        elif choice == "Sign Document":
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             private_key_file = st.file_uploader("Upload Private Key (.pem)", type=["pem"])
@@ -110,7 +109,7 @@ def main():
                 st.write("Document signed and signature saved to file")
                 st.download_button("Download Signature", signature, file_name="signature.sig")
 
-        elif app_choice == "Verify Document":
+        elif choice == "Verify Document":
             st.subheader("Verify Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             public_key_file = st.file_uploader("Upload Public Key (.pem)", type=["pem"])
