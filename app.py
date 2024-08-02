@@ -73,28 +73,26 @@ def main():
             st.session_state.logged_in = False
             st.experimental_set_query_params(logged_in=False)
             st.success("You have been logged out")
-
+        
         elif choice == "Key Generation":
             st.subheader("Key Generation")
-            if st.button("Generate Keys"):
-                private_key, public_key = generate_keys()
-                private_pem = private_key.to_pem()
-                public_pem = public_key.to_pem()
+            if st.button("Generate Keys") or ('private_pem' in st.session_state and 'public_pem' in st.session_state):
+                if 'private_pem' not in st.session_state or 'public_pem' not in st.session_state:
+                    private_key, public_key = generate_keys()
+                    st.session_state.private_pem = private_key.to_pem()
+                    st.session_state.public_pem = public_key.to_pem()
 
-                save_key_to_file("private_key.pem", private_pem)
-                save_key_to_file("public_key.pem", public_pem)
+                    with open("private_key.txt", "w") as f:
+                        f.write(st.session_state.private_pem.decode())
 
-                with open("private_key.txt", "w") as f:
-                    f.write(private_pem.decode())
-
-                with open("public_key.txt", "w") as f:
-                    f.write(public_pem.decode())
+                    with open("public_key.txt", "w") as f:
+                        f.write(st.session_state.public_pem.decode())
 
                 st.write("Keys generated and saved to files")
-                st.download_button("Download Private Key (.pem)", private_pem, file_name="private_key.pem")
-                st.download_button("Download Private Key (.txt)", private_pem.decode(), file_name="private_key.txt")
-                st.download_button("Download Public Key (.pem)", public_pem, file_name="public_key.pem")
-                st.download_button("Download Public Key (.txt)", public_pem.decode(), file_name="public_key.txt")
+                st.download_button("Download Private Key (.pem)", st.session_state.private_pem, file_name="private_key.pem")
+                st.download_button("Download Private Key (.txt)", st.session_state.private_pem.decode(), file_name="private_key.txt")
+                st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name="public_key.pem")
+                st.download_button("Download Public Key (.txt)", st.session_state.public_pem.decode(), file_name="public_key.txt")
 
         elif choice == "Sign Document":
             st.subheader("Sign Document")
