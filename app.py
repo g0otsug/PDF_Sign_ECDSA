@@ -57,13 +57,20 @@ def main():
             st.subheader("Login")
             email = st.text_input("User Email")
             password = st.text_input("Password", type='password')
-            if st.button("Login"):
-                user_uid = sign_in(email, password)
-                if user_uid:
-                    st.success(f"Welcome {email}")
-                    st.session_state.logged_in = True
-                    st.session_state.user_uid = user_uid
-                     # Refresh the page to go to the main menu
+            login_button_text = "Login"
+            if st.session_state.get('login_success'):
+                login_button_text = "Next"
+            if st.button(login_button_text):
+                if not st.session_state.get('login_success'):
+                    user_uid = sign_in(email, password)
+                    if user_uid:
+                        st.success(f"Welcome {email}")
+                        st.session_state.logged_in = True
+                        st.session_state.user_uid = user_uid
+                        st.session_state.email = email
+                        st.session_state.login_success = True
+                else:
+                    st.experimental_rerun()
 
     else:
         menu = ["Key Generation", "Sign Document", "Verify Document", "Logout"]
@@ -71,7 +78,7 @@ def main():
 
         if choice == "Logout":
             st.session_state.logged_in = False
-              # Refresh the page to go to the login screen
+            st.experimental_rerun()
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
