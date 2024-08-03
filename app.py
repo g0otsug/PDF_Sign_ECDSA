@@ -12,28 +12,6 @@ import io
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 
-# Function to load custom CSS
-def load_css(css_file_path):
-    with open(css_file_path) as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
-# Function to add a logo
-def add_logo(logo_path, width):
-    st.markdown(
-        f"""
-        <style>
-        .logo {{
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            width: {width};
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown(f'<img src="data:image/png;base64,{logo_path}" class="logo" alt="Logo">', unsafe_allow_html=True)
-
 def sign_up(email, password):
     try:
         user = auth.create_user(email=email, password=password)
@@ -75,11 +53,6 @@ def add_signature_to_pdf(pdf_bytes, signature_bytes, page_number, x, y):
 
 def main():
     st.set_page_config(page_title="Sandi Berkas", page_icon=":lock:", layout="wide")
-
-    load_css("style.css")
-
-    logo_path = "base64_string_of_logo"  # Replace with actual base64 string of the logo image
-    add_logo(logo_path, "150px")
 
     if 'page' not in st.session_state:
         st.session_state.page = "landing"
