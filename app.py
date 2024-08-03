@@ -66,6 +66,8 @@ def main():
         st.write("Securely sign and verify your PDF documents.")
         if st.button("Get Started"):
             st.session_state.page = "home"
+            if st.button("Let's Go"):
+                st.experimental_rerun()
 
     elif st.session_state.page == "home":
         st.title("Sandi Berkas - Home")
