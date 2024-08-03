@@ -51,6 +51,10 @@ def add_signature_to_pdf(pdf_bytes, signature_bytes, page_number, x, y):
     pdf_writer.write(output)
     return output.getvalue()
 
+def verify_password(stored_password, entered_password):
+    # In a real application, passwords should be hashed and checked securely
+    return stored_password == entered_password
+
 def main():
     st.set_page_config(page_title="Sandi Berkas", page_icon=":lock:", layout="wide")
 
@@ -89,10 +93,9 @@ def main():
                     st.session_state.logged_in = True
                     st.session_state.user_uid = user_uid
                     st.session_state.email = email
+                    st.session_state.password = password
                     st.session_state.page = "app"
-
-                    if st.button("Next"):
-                        st.experimental_rerun()
+                    st.experimental_rerun()
 
         elif choice == "Tutorial":
             st.subheader("Tutorial")
@@ -124,8 +127,7 @@ def main():
             st.session_state.logged_in = False
             st.session_state.page = "home"
             st.success("You have been logged out.")
-            if st.button("Quit"):
-                        st.experimental_rerun()
+            st.experimental_rerun()
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
@@ -136,10 +138,22 @@ def main():
                     st.session_state.public_pem = public_key.to_pem()
 
                 st.write("Keys generated and saved to files")
+
+            with st.expander("Lihat Private Key"):
+                entered_password = st.text_input("Enter your password to view the Private Key", type="password")
+                if st.button("View Private Key") and verify_password(st.session_state.password, entered_password):
+                    st.code(st.session_state.private_pem.decode(), language="text")
+                
+            with st.expander("Lihat Public Key"):
+                entered_password = st.text_input("Enter your password to view the Public Key", type="password")
+                if st.button("View Public Key") and verify_password(st.session_state.password, entered_password):
+                    st.code(st.session_state.public_pem.decode(), language="text")
+
+            entered_password = st.text_input("Enter your password to download keys", type="password")
+            if st.button("Download Private Key (.pem)") and verify_password(st.session_state.password, entered_password):
                 st.download_button("Download Private Key (.pem)", st.session_state.private_pem, file_name="private_key.pem")
-                st.download_button("Download Private Key (.txt)", st.session_state.private_pem.decode(), file_name="private_key.txt")
+            if st.button("Download Public Key (.pem)") and verify_password(st.session_state.password, entered_password):
                 st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name="public_key.pem")
-                st.download_button("Download Public Key (.txt)", st.session_state.public_pem.decode(), file_name="public_key.txt")
 
         elif choice == "Sign Document":
             st.subheader("Sign Document")
@@ -156,9 +170,10 @@ def main():
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
                 signed_pdf = add_signature_to_pdf(document, signature_image.read(), page_number, x, y)
-                st.download_button("Download Signed PDF", signed_pdf, file_name="signed_document.pdf")
+                entered_password = st.text_input("Enter your password to download signed PDF", type="password")
+                if st.button("Download Signed PDF") and verify_password(st.session_state.password, entered_password):
+                    st.download_button("Download Signed PDF", signed_pdf, file_name="signed_document.pdf")
                 st.write("Document signed and signature saved to file")
-                st.download_button("Download Signature", signature, file_name="signature.sig")
 
         elif choice == "Verify Document":
             st.subheader("Verify Document")
