@@ -4,6 +4,9 @@ from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
+from PyPDF2 import PdfFileWriter, PdfFileReader
+from PIL import Image
+import io
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -31,20 +34,42 @@ def sign_in(email, password):
         st.error(f"Sign in failed: {str(e)}")
     return None
 
+def add_signature_to_pdf(pdf_bytes, signature_bytes, page_number, x, y):
+    pdf_reader = PdfFileReader(io.BytesIO(pdf_bytes))
+    pdf_writer = PdfFileWriter()
+
+    for i in range(pdf_reader.numPages):
+        page = pdf_reader.getPage(i)
+        if i == page_number:
+            signature_image = Image.open(io.BytesIO(signature_bytes))
+            img_buffer = io.BytesIO()
+            signature_image.save(img_buffer, format="PNG")
+            page.mergePage(PdfFileReader(io.BytesIO(img_buffer.getvalue())).getPage(0))
+        pdf_writer.addPage(page)
+
+    output = io.BytesIO()
+    pdf_writer.write(output)
+    return output.getvalue()
+
 def main():
-    st.title("ECDSA Document Signing")
+    st.set_page_config(page_title="Sandi Berkas", page_icon=":lock:", layout="wide")
 
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
+    if 'page' not in st.session_state:
+        st.session_state.page = "landing"
 
-    if not st.session_state.logged_in:
-        menu = ["Home", "SignUp", "Login"]
+    if st.session_state.page == "landing":
+        st.title("Welcome to Sandi Berkas")
+        st.write("Securely sign and verify your PDF documents.")
+        if st.button("Get Started"):
+            st.session_state.page = "home"
+
+    elif st.session_state.page == "home":
+        st.title("Sandi Berkas - Home")
+
+        menu = ["SignUp", "Login", "Tutorial", "About"]
         choice = st.sidebar.selectbox("Menu", menu)
 
-        if choice == "Home":
-            st.subheader("Home")
-
-        elif choice == "SignUp":
+        if choice == "SignUp":
             st.subheader("Create New Account")
             email = st.text_input("User Email")
             password = st.text_input("Password", type='password')
@@ -64,20 +89,38 @@ def main():
                     st.session_state.logged_in = True
                     st.session_state.user_uid = user_uid
                     st.session_state.email = email
-                    st.experimental_set_query_params(logged_in=True)
+                    st.session_state.page = "app"
 
-                    if st.button("Next"):
-                        st.experimental_rerun()
+        elif choice == "Tutorial":
+            st.subheader("Tutorial")
+            st.write("### Steps to use Sandi Berkas")
+            st.markdown("""
+            1. **Sign Up**: Create a new account using your email and password.
+            2. **Login**: Use your credentials to log in.
+            3. **Generate Keys**: Create a pair of public and private keys for signing documents.
+            4. **Sign Document**: Upload a PDF and sign it with your private key.
+            5. **Verify Document**: Verify a signed PDF using the public key.
+            6. **Logout**: Log out of your account securely.
+            """)
 
-    else:
+        elif choice == "About":
+            st.subheader("About Sandi Berkas")
+            st.write("Sandi Berkas is a secure web application designed to help you sign and verify PDF documents using ECDSA.")
+            st.write("Features include:")
+            st.write("- User authentication")
+            st.write("- Key generation")
+            st.write("- Document signing")
+            st.write("- Document verification")
+
+    elif st.session_state.page == "app":
+        st.title(f"Welcome, {st.session_state.email}")
         menu = ["Key Generation", "Sign Document", "Verify Document", "Logout"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Logout":
             st.session_state.logged_in = False
-            st.experimental_set_query_params(logged_in=False)
-            if st.button("Quit"):
-                        st.experimental_rerun()
+            st.session_state.page = "home"
+            st.success("You have been logged out.")
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
@@ -86,12 +129,6 @@ def main():
                     private_key, public_key = generate_keys()
                     st.session_state.private_pem = private_key.to_pem()
                     st.session_state.public_pem = public_key.to_pem()
-
-                    with open("private_key.txt", "w") as f:
-                        f.write(st.session_state.private_pem.decode())
-
-                    with open("public_key.txt", "w") as f:
-                        f.write(st.session_state.public_pem.decode())
 
                 st.write("Keys generated and saved to files")
                 st.download_button("Download Private Key (.pem)", st.session_state.private_pem, file_name="private_key.pem")
@@ -103,12 +140,18 @@ def main():
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             private_key_file = st.file_uploader("Upload Private Key (.pem)", type=["pem"])
-            if pdf_file and private_key_file:
+            signature_image = st.file_uploader("Upload Signature Image (.png or .jpg)", type=["png", "jpg"])
+            page_number = st.number_input("Page Number", min_value=0, step=1)
+            x = st.number_input("X Position", min_value=0, step=1)
+            y = st.number_input("Y Position", min_value=0, step=1)
+
+            if pdf_file and private_key_file and signature_image:
                 document = pdf_file.read()
                 private_key_pem = private_key_file.read()
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
-                save_key_to_file("signature.sig", signature)
+                signed_pdf = add_signature_to_pdf(document, signature_image.read(), page_number, x, y)
+                st.download_button("Download Signed PDF", signed_pdf, file_name="signed_document.pdf")
                 st.write("Document signed and signature saved to file")
                 st.download_button("Download Signature", signature, file_name="signature.sig")
 
@@ -117,6 +160,7 @@ def main():
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             public_key_file = st.file_uploader("Upload Public Key (.pem)", type=["pem"])
             signature_file = st.file_uploader("Upload Signature File", type=["sig"])
+
             if pdf_file and public_key_file and signature_file:
                 document = pdf_file.read()
                 public_key_pem = public_key_file.read()
