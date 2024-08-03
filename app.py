@@ -91,6 +91,9 @@ def main():
                     st.session_state.email = email
                     st.session_state.page = "app"
 
+                    if st.button("Next"):
+                        st.experimental_rerun()
+
         elif choice == "Tutorial":
             st.subheader("Tutorial")
             st.write("### Steps to use Sandi Berkas")
@@ -121,6 +124,8 @@ def main():
             st.session_state.logged_in = False
             st.session_state.page = "home"
             st.success("You have been logged out.")
+            if st.button("Quit"):
+                        st.experimental_rerun()
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
