@@ -3,7 +3,7 @@ import firebase_admin
 from firebase_admin import auth, db
 from firebase_config import cred, DATABASE_URL
 from ecdsa import SigningKey, VerifyingKey
-from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
+from ecdsa_script import generate_keys, sign_document, verify_signature
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from PIL import Image
 import io
@@ -86,8 +86,7 @@ def main():
         st.write("Securely sign and verify your PDF documents.")
         if st.button("Get Started"):
             st.session_state.page = "home"
-            if st.button("Let's Go"):
-                st.experimental_rerun()
+            st.experimental_rerun()
 
     elif st.session_state.page == "home":
         st.title("Sandi Berkas - Home")
@@ -117,9 +116,7 @@ def main():
                     st.session_state.email = email
                     st.session_state.password = password
                     st.session_state.page = "app"
-                    if st.button("Next"):
-                        st.experimental_rerun()
-                    
+                    st.experimental_rerun()
 
         elif choice == "Tutorial":
             st.subheader("Tutorial")
@@ -151,8 +148,7 @@ def main():
             st.session_state.logged_in = False
             st.session_state.page = "home"
             st.success("You have been logged out.")
-            if st.button("Quit"):
-                st.experimental_rerun()
+            st.experimental_rerun()
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
