@@ -7,7 +7,7 @@
 # maintained and developed by Artifex Software, Inc. https://artifex.com.
 # ------------------------------------------------------------------------
 import sys
-from fitz.fitz import *
+from fitz import *
 
 # define the supported colorspaces for convenience
 fitz.csRGB = fitz.Colorspace(fitz.CS_RGB)
