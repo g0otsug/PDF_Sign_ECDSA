@@ -281,14 +281,12 @@ def main():
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             private_key_file = st.file_uploader("Upload Private Key (.pem)", type=["pem"])
-            page_number = st.number_input("Page Number", min_value=0, step=1)
 
             if pdf_file and private_key_file:
                 document = pdf_file.read()
                 private_key_pem = private_key_file.read()
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
-                signed_pdf = add_signature_to_pdf(document, page_number, signature)
                 original_file_name = pdf_file.name
                 signed_file_name = f"signature_{original_file_name}"
                 entered_password = st.text_input("Enter your password to download signed PDF", type="password")
