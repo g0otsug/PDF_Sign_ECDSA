@@ -38,20 +38,22 @@ def add_signature_to_pdf(pdf_bytes, page_number, signature):
 
     for i, page in enumerate(reader.pages):
         if i == page_number:
-            # Define the annotation (text box)
+            # Create an annotation dictionary
             annot = {
                 NameObject('/Type'): NameObject('/Annot'),
-                NameObject('/Subtype'): NameObject('/Text'),
+                NameObject('/Subtype'): NameObject('/FreeText'),
                 NameObject('/Contents'): TextStringObject(f"Signature: {signature.hex()}"),
-                NameObject('/Rect'): ArrayObject([FloatObject(100), FloatObject(100), FloatObject(400), FloatObject(150)]),
-                NameObject('/P'): page
+                NameObject('/Rect'): ArrayObject([
+                    FloatObject(100),  # x0
+                    FloatObject(100),  # y0
+                    FloatObject(400),  # x1
+                    FloatObject(150)   # y1
+                ]),
+                NameObject('/F'): FloatObject(4)  # Annotation flags: 4 = annotation is printable
             }
 
-            # Add the annotation to the page's Annots list
-            if '/Annots' in page:
-                page['/Annots'].append(annot)
-            else:
-                page[NameObject('/Annots')] = ArrayObject([annot])
+            # Add the annotation to the page
+            page.add_annotation(annot)
 
         writer.add_page(page)
 
