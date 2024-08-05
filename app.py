@@ -156,7 +156,7 @@ def main():
 
             entered_password = st.text_input("Enter your password to download keys", type="password")
             if st.button("Download Private Key (.pem)") and verify_password(st.session_state.password, entered_password):
-                st.session_state.private_pem, file_name="private_key.pem"
+                st.download_button("Download Privat Key (.pem)", st.session_state.private_pem, file_name="private_key.pem")
             if st.button("Download Public Key (.pem)") and verify_password(st.session_state.password, entered_password):
                 st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name="public_key.pem")
 
