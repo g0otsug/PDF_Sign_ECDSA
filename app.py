@@ -55,6 +55,11 @@ def verify_password(stored_password, entered_password):
     # In a real application, passwords should be hashed and checked securely
     return stored_password == entered_password
 
+def get_file_name(email, key_type):
+    user_name = email.split('@')[0]
+    file_name = f"{key_type}_key_{user_name}.pem"
+    return file_name
+
 def main():
     st.set_page_config(page_title="Sandi Berkas", page_icon=":lock:", layout="wide")
 
@@ -156,9 +161,11 @@ def main():
 
             entered_password = st.text_input("Enter your password to download keys", type="password")
             if st.button("Download Private Key (.pem)") and verify_password(st.session_state.password, entered_password):
-                st.download_button("Download Private Key (.pem)", st.session_state.private_pem, file_name="private_key.pem")
+                file_name = get_file_name(st.session_state.email, 'private')
+                st.download_button("Download Private Key (.pem)", st.session_state.private_pem, file_name=file_name)
             if st.button("Download Public Key (.pem)") and verify_password(st.session_state.password, entered_password):
-                st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name="public_key.pem")
+                file_name = get_file_name(st.session_state.email, 'public')
+                st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name=file_name)
 
         elif choice == "Sign Document":
             st.subheader("Sign Document")
