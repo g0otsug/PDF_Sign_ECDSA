@@ -165,7 +165,6 @@ def main():
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             public_key_file = st.file_uploader("Upload Public Key (.pem)", type=["pem"])
             signature_file = st.file_uploader("Upload Signature File", type=["sig"])
-
             if pdf_file and public_key_file and signature_file:
                 document = pdf_file.read()
                 public_key_pem = public_key_file.read()
@@ -173,6 +172,5 @@ def main():
                 signature = signature_file.read()
                 result = verify_signature(public_key, document, signature)
                 st.write("Signature verifies" if result else "Signature does not verify")
-
 if __name__ == '__main__':
     main()
