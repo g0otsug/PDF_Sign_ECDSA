@@ -4,8 +4,6 @@ from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
-import fitz  # PyMuPDF
-from PIL import Image
 import io
 
 # Initialize Firebase
@@ -32,18 +30,13 @@ def sign_in(email, password):
         st.error(f"Sign in failed: {str(e)}")
     return None
 
-def add_signature_to_pdf(pdf_bytes, signature_bytes, page_number, x, y):
+def add_signature_to_pdf(pdf_bytes, page_number, signature):
     pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = pdf_document.load_page(page_number)
 
-    signature_image = Image.open(io.BytesIO(signature_bytes))
-    img_buffer = io.BytesIO()
-    signature_image.save(img_buffer, format="PNG")
-    img_buffer.seek(0)
-    signature_image = fitz.Pixmap(img_buffer)
-
-    rect = fitz.Rect(x, y, x + signature_image.width, y + signature_image.height)
-    page.insert_image(rect, pixmap=signature_image)
+    # Add signature text to the document
+    rect = fitz.Rect(100, 100, 400, 150)
+    page.insert_textbox(rect, f"Signature: {signature.hex()}", fontsize=12)
 
     output = io.BytesIO()
     pdf_document.save(output)
@@ -169,17 +162,14 @@ def main():
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             private_key_file = st.file_uploader("Upload Private Key (.pem)", type=["pem"])
-            signature_image = st.file_uploader("Upload Signature Image (.png or .jpg)", type=["png", "jpg"])
             page_number = st.number_input("Page Number", min_value=0, step=1)
-            x = st.number_input("X Position", min_value=0, step=1)
-            y = st.number_input("Y Position", min_value=0, step=1)
 
-            if pdf_file and private_key_file and signature_image:
+            if pdf_file and private_key_file:
                 document = pdf_file.read()
                 private_key_pem = private_key_file.read()
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
-                signed_pdf = add_signature_to_pdf(document, signature_image.read(), page_number, x, y)
+                signed_pdf = add_signature_to_pdf(document, page_number, signature)
                 original_file_name = pdf_file.name
                 signed_file_name = f"signature_{original_file_name}"
                 entered_password = st.text_input("Enter your password to download signed PDF", type="password")
