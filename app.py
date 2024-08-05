@@ -154,9 +154,11 @@ def main():
                 private_key_pem = private_key_file.read()
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
+                original_file_name = pdf_file.name
+                signed_file_name = f"signature_{original_file_name}"
                 save_key_to_file("signature.sig", signature)
                 st.write("Document signed and signature saved to file")
-                st.download_button("Download Signature", signature, file_name="signature.sig")
+                st.download_button("Download Signature", signature, file_name=signed_file_name)
 
         elif choice == "Verify Document":
             st.subheader("Verify Document")
