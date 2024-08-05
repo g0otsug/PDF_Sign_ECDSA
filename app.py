@@ -4,7 +4,7 @@ from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
-from pypdf import PdfWriter, PdfReader
+import fitz  # PyMuPDF
 from PIL import Image
 import io
 
@@ -25,8 +25,6 @@ def sign_up(email, password):
 def sign_in(email, password):
     try:
         user = auth.get_user_by_email(email)
-        # Note: In a real application, you would use Firebase Authentication SDK to verify the password
-        # Firebase Admin SDK doesn't support password verification directly
         return user.uid
     except firebase_admin._auth_utils.UserNotFoundError:
         st.error("User not found")
@@ -35,23 +33,24 @@ def sign_in(email, password):
     return None
 
 def add_signature_to_pdf(pdf_bytes, signature_bytes, page_number, x, y):
-    pdf_reader = PdfReader(io.BytesIO(pdf_bytes))
-    pdf_writer = PdfWriter()
+    pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+    page = pdf_document.load_page(page_number)
 
-    for i, page in enumerate(pdf_reader.pages):
-        if i == page_number:
-            signature_image = Image.open(io.BytesIO(signature_bytes))
-            img_buffer = io.BytesIO()
-            signature_image.save(img_buffer, format="PNG")
-            page.merge_page(PdfReader(io.BytesIO(img_buffer.getvalue())).pages[0])
-        pdf_writer.add_page(page)
+    signature_image = Image.open(io.BytesIO(signature_bytes))
+    img_buffer = io.BytesIO()
+    signature_image.save(img_buffer, format="PNG")
+    img_buffer.seek(0)
+    signature_image = fitz.Pixmap(img_buffer)
+
+    rect = fitz.Rect(x, y, x + signature_image.width, y + signature_image.height)
+    page.insert_image(rect, pixmap=signature_image)
 
     output = io.BytesIO()
-    pdf_writer.write(output)
+    pdf_document.save(output)
+    pdf_document.close()
     return output.getvalue()
 
 def verify_password(stored_password, entered_password):
-    # In a real application, passwords should be hashed and checked securely
     return stored_password == entered_password
 
 def get_file_name(email, key_type):
