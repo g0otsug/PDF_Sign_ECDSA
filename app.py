@@ -4,9 +4,8 @@ from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
+import fitz  # PyMuPDF
 import io
-from PyPDF2 import PdfReader, PdfWriter
-from PyPDF2.generic import NameObject, TextStringObject, FloatObject, ArrayObject
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -33,32 +32,18 @@ def sign_in(email, password):
     return None
 
 def add_signature_to_pdf(pdf_bytes, page_number, signature):
-    reader = PdfReader(io.BytesIO(pdf_bytes))
-    writer = PdfWriter()
+    pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
+    page = pdf_document.load_page(page_number)
 
-    for i, page in enumerate(reader.pages):
-        if i == page_number:
-            # Create an annotation dictionary
-            annot = {
-                NameObject('/Type'): NameObject('/Annot'),
-                NameObject('/Subtype'): NameObject('/FreeText'),
-                NameObject('/Contents'): TextStringObject(f"Signature: {signature.hex()}"),
-                NameObject('/Rect'): ArrayObject([
-                    FloatObject(100),  # x0
-                    FloatObject(100),  # y0
-                    FloatObject(400),  # x1
-                    FloatObject(150)   # y1
-                ]),
-                NameObject('/F'): FloatObject(4)  # Annotation flags: 4 = annotation is printable
-            }
-
-            # Add the annotation to the page
-            page.add_annotation(annot)
-
-        writer.add_page(page)
-
+    # Define the position and size for the text annotation
+    rect = fitz.Rect(100, 100, 400, 150)
+    
+    # Add the text annotation (signature) to the PDF
+    page.insert_textbox(rect, f"Signature: {signature.hex()}", fontsize=12, color=(0, 0, 0))
+    
     output = io.BytesIO()
-    writer.write(output)
+    pdf_document.save(output)
+    pdf_document.close()
     return output.getvalue()
 
 def verify_password(stored_password, entered_password):
