@@ -149,18 +149,14 @@ def main():
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             private_key_file = st.file_uploader("Upload Private Key (.pem)", type=["pem"])
-
             if pdf_file and private_key_file:
                 document = pdf_file.read()
                 private_key_pem = private_key_file.read()
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
-                original_file_name = pdf_file.name
-                signed_file_name = f"signature_{original_file_name}"
-                entered_password = st.text_input("Enter your password to download signed PDF", type="password")
-                if st.button("Download Signed PDF") and verify_password(st.session_state.password, entered_password):
-                    st.download_button("Download Signed PDF", file_name=signed_file_name)
+                save_key_to_file("signature.sig", signature)
                 st.write("Document signed and signature saved to file")
+                st.download_button("Download Signature", signature, file_name="signature.sig")
 
         elif choice == "Verify Document":
             st.subheader("Verify Document")
