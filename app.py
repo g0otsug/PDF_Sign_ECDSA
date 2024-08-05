@@ -6,7 +6,7 @@ from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 import io
 from PyPDF2 import PdfReader, PdfWriter
-from PyPDF2.generic import NameObject, TextStringObject, FloatObject
+from PyPDF2.generic import NameObject, TextStringObject, FloatObject, ArrayObject
 
 # Initialize Firebase
 if not firebase_admin._apps:
