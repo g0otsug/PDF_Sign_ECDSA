@@ -4,8 +4,6 @@ from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
-import fitz  # PyMuPDF
-import io
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -31,20 +29,6 @@ def sign_in(email, password):
         st.error(f"Sign in failed: {str(e)}")
     return None
 
-def add_signature_to_pdf(pdf_bytes, page_number, signature):
-    pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-    page = pdf_document.load_page(page_number)
-
-    # Define the position and size for the text annotation
-    rect = fitz.Rect(100, 100, 400, 150)
-    
-    # Add the text annotation (signature) to the PDF
-    page.insert_textbox(rect, f"Signature: {signature.hex()}", fontsize=12, color=(0, 0, 0))
-    
-    output = io.BytesIO()
-    pdf_document.save(output)
-    pdf_document.close()
-    return output.getvalue()
 
 def verify_password(stored_password, entered_password):
     return stored_password == entered_password
@@ -164,14 +148,12 @@ def main():
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
             private_key_file = st.file_uploader("Upload Private Key (.pem)", type=["pem"])
-            page_number = st.number_input("Page Number", min_value=0, step=1)
 
             if pdf_file and private_key_file:
                 document = pdf_file.read()
                 private_key_pem = private_key_file.read()
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
-                signed_pdf = add_signature_to_pdf(document, page_number, signature)
                 original_file_name = pdf_file.name
                 signed_file_name = f"signature_{original_file_name}"
                 entered_password = st.text_input("Enter your password to download signed PDF", type="password")
