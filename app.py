@@ -1,17 +1,16 @@
 import streamlit as st
 import firebase_admin
-from firebase_admin import auth, db
-from firebase_config import cred, DATABASE_URL
+from firebase_admin import auth
+from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
-from ecdsa_script import generate_keys, sign_document, verify_signature
+from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from PIL import Image
 import io
-import datetime
 
 # Initialize Firebase
 if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred, {'databaseURL': DATABASE_URL})
+    firebase_admin.initialize_app(cred)
 
 def sign_up(email, password):
     try:
@@ -56,25 +55,6 @@ def verify_password(stored_password, entered_password):
     # In a real application, passwords should be hashed and checked securely
     return stored_password == entered_password
 
-def store_key_in_db(user_uid, key_type, private_pem, public_pem):
-    key_data = {
-        'key_type': key_type,
-        'valid_until': (datetime.datetime.now() + datetime.timedelta(days=730)).strftime('%Y-%m-%d'),
-        'status': 'active',
-        'private_pem': private_pem.decode('utf-8'),
-        'public_pem': public_pem.decode('utf-8')
-    }
-    ref = db.reference(f'users/{user_uid}/keys')
-    ref.push(key_data)
-
-def get_keys_from_db(user_uid):
-    ref = db.reference(f'users/{user_uid}/keys')
-    return ref.get()
-
-def delete_key_from_db(user_uid, key_id):
-    ref = db.reference(f'users/{user_uid}/keys/{key_id}')
-    ref.update({'status': 'inactive'})
-
 def main():
     st.set_page_config(page_title="Sandi Berkas", page_icon=":lock:", layout="wide")
 
@@ -86,7 +66,8 @@ def main():
         st.write("Securely sign and verify your PDF documents.")
         if st.button("Get Started"):
             st.session_state.page = "home"
-            st.experimental_rerun()
+            if st.button("Let's Go"):
+                st.experimental_rerun()
 
     elif st.session_state.page == "home":
         st.title("Sandi Berkas - Home")
@@ -116,7 +97,9 @@ def main():
                     st.session_state.email = email
                     st.session_state.password = password
                     st.session_state.page = "app"
-                    st.experimental_rerun()
+                    if st.button("Next"):
+                        st.experimental_rerun()
+                    
 
         elif choice == "Tutorial":
             st.subheader("Tutorial")
@@ -141,60 +124,41 @@ def main():
 
     elif st.session_state.page == "app":
         st.title(f"Welcome, {st.session_state.email}")
-        menu = ["Key Generation", "Key Storage", "Sign Document", "Verify Document", "Logout"]
+        menu = ["Key Generation", "Sign Document", "Verify Document", "Logout"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Logout":
             st.session_state.logged_in = False
             st.session_state.page = "home"
             st.success("You have been logged out.")
-            st.experimental_rerun()
+            if st.button("Quit"):
+                st.experimental_rerun()
 
         elif choice == "Key Generation":
             st.subheader("Key Generation")
-            entered_password = st.text_input("Enter your password to generate keys", type="password")
-            if st.button("Generate Keys") and verify_password(st.session_state.password, entered_password):
-                private_key, public_key = generate_keys()
-                store_key_in_db(st.session_state.user_uid, 'ECDSA', private_key.to_pem(), public_key.to_pem())
-                st.session_state.private_pem = private_key.to_pem()
-                st.session_state.public_pem = public_key.to_pem()
-                st.write("Keys generated and stored in database")
+            if st.button("Generate Keys") or ('private_pem' in st.session_state and 'public_pem' in st.session_state):
+                if 'private_pem' not in st.session_state or 'public_pem' not in st.session_state:
+                    private_key, public_key = generate_keys()
+                    st.session_state.private_pem = private_key.to_pem()
+                    st.session_state.public_pem = public_key.to_pem()
 
-        elif choice == "Key Storage":
-            st.subheader("Key Storage")
-            keys = get_keys_from_db(st.session_state.user_uid)
-            if keys:
-                for key_id, key_data in keys.items():
-                    st.write(f"Key Type: {key_data['key_type']}")
-                    st.write(f"Valid Until: {key_data['valid_until']}")
-                    st.write(f"Status: {key_data['status']}")
-                    if key_data['status'] == 'active':
-                        if st.button("View Private Key", key=f"view_private_{key_id}"):
-                            entered_password = st.text_input("Enter your password to view the Private Key", type="password")
-                            if st.button("Confirm View", key=f"confirm_view_private_{key_id}") and verify_password(st.session_state.password, entered_password):
-                                st.code(key_data['private_pem'], language="text")
-                            else:
-                                st.error("Wrong password")
-                        if st.button("View Public Key", key=f"view_public_{key_id}"):
-                            entered_password = st.text_input("Enter your password to view the Public Key", type="password")
-                            if st.button("Confirm View", key=f"confirm_view_public_{key_id}") and verify_password(st.session_state.password, entered_password):
-                                st.code(key_data['public_pem'], language="text")
-                            else:
-                                st.error("Wrong password")
-                        if st.button("Download Private Key (.pem)", key=f"download_private_{key_id}"):
-                            entered_password = st.text_input("Enter your password to download the Private Key", type="password")
-                            if st.button("Confirm Download", key=f"confirm_download_private_{key_id}") and verify_password(st.session_state.password, entered_password):
-                                st.download_button("Download Private Key (.pem)", key_data['private_pem'].encode('utf-8'), file_name="private_key.pem")
-                        if st.button("Download Public Key (.pem)", key=f"download_public_{key_id}"):
-                            entered_password = st.text_input("Enter your password to download the Public Key", type="password")
-                            if st.button("Confirm Download", key=f"confirm_download_public_{key_id}") and verify_password(st.session_state.password, entered_password):
-                                st.download_button("Download Public Key (.pem)", key_data['public_pem'].encode('utf-8'), file_name="public_key.pem")
-                        if st.button("Delete Key", key=f"delete_{key_id}"):
-                            delete_key_from_db(st.session_state.user_uid, key_id)
-                            st.success("Key deleted")
-                            st.experimental_rerun()
-            else:
-                st.write("No keys found.")
+                st.write("Keys generated and saved to files")
+
+            with st.expander("Lihat Private Key"):
+                entered_password = st.text_input("Enter your password to view the Private Key", type="password")
+                if st.button("View Private Key") and verify_password(st.session_state.password, entered_password):
+                    st.code(st.session_state.private_pem.decode(), language="text")
+                
+            with st.expander("Lihat Public Key"):
+                entered_password = st.text_input("Enter your password to view the Public Key", type="password")
+                if st.button("View Public Key") and verify_password(st.session_state.password, entered_password):
+                    st.code(st.session_state.public_pem.decode(), language="text")
+
+            entered_password = st.text_input("Enter your password to download keys", type="password")
+            if st.button("Download Private Key (.pem)") and verify_password(st.session_state.password, entered_password):
+                st.download_button("Download Private Key (.pem)", st.session_state.private_pem, file_name="private_key.pem")
+            if st.button("Download Public Key (.pem)") and verify_password(st.session_state.password, entered_password):
+                st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name="public_key.pem")
 
         elif choice == "Sign Document":
             st.subheader("Sign Document")
