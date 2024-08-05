@@ -36,20 +36,23 @@ def add_signature_to_pdf(pdf_bytes, page_number, signature):
     reader = PdfReader(io.BytesIO(pdf_bytes))
     writer = PdfWriter()
 
-    for i in range(len(reader.pages)):
-        page = reader.pages[i]
+    for i, page in enumerate(reader.pages):
         if i == page_number:
-            annotation = {
-                NameObject("/Type"): NameObject("/Annot"),
-                NameObject("/Subtype"): NameObject("/Text"),
-                NameObject("/Contents"): TextStringObject(f"Signature: {signature.hex()}"),
-                NameObject("/Rect"): [FloatObject(100), FloatObject(100), FloatObject(400), FloatObject(150)],
-                NameObject("/P"): page,
+            # Define the annotation (text box)
+            annot = {
+                NameObject('/Type'): NameObject('/Annot'),
+                NameObject('/Subtype'): NameObject('/Text'),
+                NameObject('/Contents'): TextStringObject(f"Signature: {signature.hex()}"),
+                NameObject('/Rect'): ArrayObject([FloatObject(100), FloatObject(100), FloatObject(400), FloatObject(150)]),
+                NameObject('/P'): page
             }
-            if "/Annots" in page:
-                page["/Annots"].append(annotation)
+
+            # Add the annotation to the page's Annots list
+            if '/Annots' in page:
+                page['/Annots'].append(annot)
             else:
-                page[NameObject("/Annots")] = [annotation]
+                page[NameObject('/Annots')] = ArrayObject([annot])
+
         writer.add_page(page)
 
     output = io.BytesIO()
