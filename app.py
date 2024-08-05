@@ -158,7 +158,7 @@ def main():
                 signed_file_name = f"signature_{original_file_name}"
                 entered_password = st.text_input("Enter your password to download signed PDF", type="password")
                 if st.button("Download Signed PDF") and verify_password(st.session_state.password, entered_password):
-                    st.download_button("Download Signed PDF", signed_pdf, file_name=signed_file_name)
+                    st.download_button("Download Signed PDF", file_name=signed_file_name)
                 st.write("Document signed and signature saved to file")
 
 
@@ -291,7 +291,7 @@ def main():
                 signed_file_name = f"signature_{original_file_name}"
                 entered_password = st.text_input("Enter your password to download signed PDF", type="password")
                 if st.button("Download Signed PDF") and verify_password(st.session_state.password, entered_password):
-                    st.download_button("Download Signed PDF", signed_pdf, file_name=signed_file_name)
+                    st.download_button("Download Signed PDF", file_name=signed_file_name)
                 st.write("Document signed and signature saved to file")
 
         elif choice == "Verify Document":
