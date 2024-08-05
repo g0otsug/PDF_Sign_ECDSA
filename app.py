@@ -4,7 +4,7 @@ from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
-from PyPDF2 import PdfFileWriter, PdfFileReader
+from pypdf import PdfWriter, PdfReader
 from PIL import Image
 import io
 
@@ -35,17 +35,16 @@ def sign_in(email, password):
     return None
 
 def add_signature_to_pdf(pdf_bytes, signature_bytes, page_number, x, y):
-    pdf_reader = PdfFileReader(io.BytesIO(pdf_bytes))
-    pdf_writer = PdfFileWriter()
+    pdf_reader = PdfReader(io.BytesIO(pdf_bytes))
+    pdf_writer = PdfWriter()
 
-    for i in range(pdf_reader.numPages):
-        page = pdf_reader.getPage(i)
+    for i, page in enumerate(pdf_reader.pages):
         if i == page_number:
             signature_image = Image.open(io.BytesIO(signature_bytes))
             img_buffer = io.BytesIO()
             signature_image.save(img_buffer, format="PNG")
-            page.mergePage(PdfFileReader(io.BytesIO(img_buffer.getvalue())).getPage(0))
-        pdf_writer.addPage(page)
+            page.merge_page(PdfReader(io.BytesIO(img_buffer.getvalue())).pages[0])
+        pdf_writer.add_page(page)
 
     output = io.BytesIO()
     pdf_writer.write(output)
