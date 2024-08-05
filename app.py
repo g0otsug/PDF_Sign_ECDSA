@@ -182,9 +182,11 @@ def main():
                 private_key = SigningKey.from_pem(private_key_pem)
                 signature = sign_document(private_key, document)
                 signed_pdf = add_signature_to_pdf(document, signature_image.read(), page_number, x, y)
+                original_file_name = pdf_file.name
+                signed_file_name = f"signature_{original_file_name}"
                 entered_password = st.text_input("Enter your password to download signed PDF", type="password")
                 if st.button("Download Signed PDF") and verify_password(st.session_state.password, entered_password):
-                    st.download_button("Download Signed PDF", signed_pdf, file_name="signed_document.pdf")
+                    st.download_button("Download Signed PDF", signed_pdf, file_name=signed_file_name)
                 st.write("Document signed and signature saved to file")
 
         elif choice == "Verify Document":
