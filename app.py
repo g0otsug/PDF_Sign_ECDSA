@@ -1,10 +1,10 @@
 import streamlit as st
 import firebase_admin
-from firebase_admin import auth
+from firebase_admin import auth, db
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
-from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file, store_keys, get_user_keys, get_all_users
-import datetime
+from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
+import hashlib
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -13,8 +13,6 @@ if not firebase_admin._apps:
 def sign_up(email, password):
     try:
         user = auth.create_user(email=email, password=password)
-        # Store user in Firestore
-        db.collection('users').add({'email': email, 'public_key': ''})
         return user.uid
     except firebase_admin._auth_utils.EmailAlreadyExistsError:
         st.error("Email already exists")
@@ -39,6 +37,28 @@ def get_file_name(email, key_type):
     user_name = email.split('@')[0]
     file_name = f"{key_type}_key_{user_name}.pem"
     return file_name
+
+def save_key_to_database(uid, key_type, key_pem, key_period):
+    ref = db.reference(f'keys/{uid}')
+    new_key_ref = ref.push()
+    new_key_ref.set({
+        'type': key_type,
+        'pem': key_pem.decode(),
+        'period': key_period,
+        'actions': {
+            'download': True,
+            'view': True,
+            'delete': True
+        }
+    })
+
+def get_keys_from_database(uid):
+    ref = db.reference(f'keys/{uid}')
+    return ref.get()
+
+def delete_key_from_database(uid, key_id):
+    ref = db.reference(f'keys/{uid}/{key_id}')
+    ref.delete()
 
 def main():
     st.set_page_config(page_title="Sandi Berkas", page_icon=":lock:", layout="wide")
@@ -84,7 +104,7 @@ def main():
                     st.session_state.page = "app"
                     if st.button("Next"):
                         st.experimental_rerun()
-                    
+
         elif choice == "Tutorial":
             st.subheader("Tutorial")
             st.write("### Steps to use Sandi Berkas")
@@ -108,7 +128,7 @@ def main():
 
     elif st.session_state.page == "app":
         st.title(f"Welcome, {st.session_state.email}")
-        menu = ["Key Generation", "Sign Document", "Verify Document", "Key Storage", "Users", "Logout"]
+        menu = ["Key Generation", "Key Storage", "Sign Document", "Verify Document", "Users", "Logout"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Logout":
@@ -146,10 +166,26 @@ def main():
                 file_name = get_file_name(st.session_state.email, 'public')
                 st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name=file_name)
 
-            # Store keys in Firestore
-            if st.button("Store Keys"):
-                store_keys(st.session_state.email, SigningKey.from_pem(st.session_state.private_pem), VerifyingKey.from_pem(st.session_state.public_pem))
-                st.success("Keys stored successfully")
+            if st.button("Save Keys to Database"):
+                save_key_to_database(st.session_state.user_uid, 'private', st.session_state.private_pem, '1 year')
+                save_key_to_database(st.session_state.user_uid, 'public', st.session_state.public_pem, '1 year')
+                st.success("Keys saved to database")
+
+        elif choice == "Key Storage":
+            st.subheader("Key Storage")
+            keys = get_keys_from_database(st.session_state.user_uid)
+            if keys:
+                for key_id, key_data in keys.items():
+                    st.write(f"Key ID: {key_id}")
+                    st.write(f"Key Type: {key_data['type']}")
+                    st.write(f"Key Period: {key_data['period']}")
+                    if st.button(f"Download {key_data['type']} Key"):
+                        st.download_button("Download Key", key_data['pem'], file_name=f"{key_data['type']}_key_{st.session_state.email}.pem")
+                    if st.button(f"View {key_data['type']} Key"):
+                        st.code(key_data['pem'], language="text")
+                    if st.button(f"Delete {key_data['type']} Key"):
+                        delete_key_from_database(st.session_state.user_uid, key_id)
+                        st.success(f"{key_data['type']} Key deleted")
 
         elif choice == "Sign Document":
             st.subheader("Sign Document")
@@ -177,30 +213,16 @@ def main():
                 result = verify_signature(public_key, document, signature)
                 st.write("Signature verifies" if result else "Signature does not verify")
 
-        elif choice == "Key Storage":
-            st.subheader("Key Storage")
-            keys = get_user_keys(st.session_state.email)
-            for i, key in enumerate(keys, start=1):
-                st.write(f"{i}. Key Name: {key['public_key'][:10]}... | Key Period: {key['key_period'].strftime('%Y-%m-%d')}")
-                if st.button(f"View Private Key {i}"):
-                    st.text(key['private_key'])
-                if st.button(f"View Public Key {i}"):
-                    st.text(key['public_key'])
-                if st.button(f"Download Private Key {i}"):
-                    st.download_button("Download Private Key (.pem)", key['private_key'], file_name=f"private_key_{i}.pem")
-                if st.button(f"Download Public Key {i}"):
-                    st.download_button("Download Public Key (.pem)", key['public_key'], file_name=f"public_key_{i}.pem")
-                if st.button(f"Delete Key {i}"):
-                    # Add code to delete key
-                    pass
-
         elif choice == "Users":
             st.subheader("Users")
-            users = get_all_users()
-            for i, user in enumerate(users, start=1):
-                st.write(f"{i}. Email: {user['email']} | Public Key: {user['public_key'][:10]}...")
-                if st.button(f"Download Public Key {i}"):
-                    st.download_button("Download Public Key (.pem)", user['public_key'], file_name=f"public_key_{i}.pem")
+            users = auth.list_users().users
+            for i, user in enumerate(users, 1):
+                st.write(f"{i}. {user.email}")
+                public_keys = get_keys_from_database(user.uid)
+                for key_id, key_data in public_keys.items():
+                    if key_data['type'] == 'public':
+                        if st.button(f"Download Public Key for {user.email}"):
+                            st.download_button("Download Public Key", key_data['pem'], file_name=f"public_key_{user.email}.pem")
 
 if __name__ == '__main__':
     main()
