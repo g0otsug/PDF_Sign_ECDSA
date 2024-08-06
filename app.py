@@ -3,8 +3,8 @@ import firebase_admin
 from firebase_admin import auth
 from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
-from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
-
+from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file, store_keys, get_user_keys, get_all_users
+import datetime
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -13,6 +13,8 @@ if not firebase_admin._apps:
 def sign_up(email, password):
     try:
         user = auth.create_user(email=email, password=password)
+        # Store user in Firestore
+        db.collection('users').add({'email': email, 'public_key': ''})
         return user.uid
     except firebase_admin._auth_utils.EmailAlreadyExistsError:
         st.error("Email already exists")
@@ -29,8 +31,6 @@ def sign_in(email, password):
     except Exception as e:
         st.error(f"Sign in failed: {str(e)}")
     return None
-
-
 
 def verify_password(stored_password, entered_password):
     return stored_password == entered_password
@@ -85,7 +85,6 @@ def main():
                     if st.button("Next"):
                         st.experimental_rerun()
                     
-
         elif choice == "Tutorial":
             st.subheader("Tutorial")
             st.write("### Steps to use Sandi Berkas")
@@ -109,7 +108,7 @@ def main():
 
     elif st.session_state.page == "app":
         st.title(f"Welcome, {st.session_state.email}")
-        menu = ["Key Generation", "Sign Document", "Verify Document", "Logout"]
+        menu = ["Key Generation", "Sign Document", "Verify Document", "Key Storage", "Users", "Logout"]
         choice = st.sidebar.selectbox("Menu", menu)
 
         if choice == "Logout":
@@ -147,6 +146,11 @@ def main():
                 file_name = get_file_name(st.session_state.email, 'public')
                 st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name=file_name)
 
+            # Store keys in Firestore
+            if st.button("Store Keys"):
+                store_keys(st.session_state.email, SigningKey.from_pem(st.session_state.private_pem), VerifyingKey.from_pem(st.session_state.public_pem))
+                st.success("Keys stored successfully")
+
         elif choice == "Sign Document":
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
@@ -173,6 +177,30 @@ def main():
                 result = verify_signature(public_key, document, signature)
                 st.write("Signature verifies" if result else "Signature does not verify")
 
+        elif choice == "Key Storage":
+            st.subheader("Key Storage")
+            keys = get_user_keys(st.session_state.email)
+            for i, key in enumerate(keys, start=1):
+                st.write(f"{i}. Key Name: {key['public_key'][:10]}... | Key Period: {key['key_period'].strftime('%Y-%m-%d')}")
+                if st.button(f"View Private Key {i}"):
+                    st.text(key['private_key'])
+                if st.button(f"View Public Key {i}"):
+                    st.text(key['public_key'])
+                if st.button(f"Download Private Key {i}"):
+                    st.download_button("Download Private Key (.pem)", key['private_key'], file_name=f"private_key_{i}.pem")
+                if st.button(f"Download Public Key {i}"):
+                    st.download_button("Download Public Key (.pem)", key['public_key'], file_name=f"public_key_{i}.pem")
+                if st.button(f"Delete Key {i}"):
+                    # Add code to delete key
+                    pass
+
+        elif choice == "Users":
+            st.subheader("Users")
+            users = get_all_users()
+            for i, user in enumerate(users, start=1):
+                st.write(f"{i}. Email: {user['email']} | Public Key: {user['public_key'][:10]}...")
+                if st.button(f"Download Public Key {i}"):
+                    st.download_button("Download Public Key (.pem)", user['public_key'], file_name=f"public_key_{i}.pem")
+
 if __name__ == '__main__':
     main()
-
