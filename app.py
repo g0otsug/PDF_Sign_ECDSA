@@ -215,6 +215,8 @@ def main():
                     if key_data['type'] == 'public':
                         if st.button(f"Download Public Key for {user.email}"):
                             st.download_button("Download Public Key", key_data['pem'], file_name=f"public_key_{user.email}.pem")
+                if not public_key_available:
+                    st.write("Kunci publik tidak tersedia")
 
 if __name__ == '__main__':
     main()
