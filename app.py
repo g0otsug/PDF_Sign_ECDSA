@@ -211,8 +211,10 @@ def main():
             for i, user in enumerate(users, 1):
                 st.write(f"{i}. {user.email}")
                 public_keys = get_keys_from_database(user.uid)
+                public_key_available = False
                 for key_id, key_data in public_keys.items():
                     if key_data['type'] == 'public':
+                        public_key_available = True
                         if st.button(f"Download Public Key for {user.email}"):
                             st.download_button("Download Public Key", key_data['pem'], file_name=f"public_key_{user.email}.pem")
                 if not public_key_available:
