@@ -1,7 +1,7 @@
 import firebase_admin
-from firebase_admin import credentials, auth
+from firebase_admin import credentials, auth, firestore
 
 cred = credentials.Certificate("webdigsin-firebase-adminsdk-odsxc-4464d63e5b.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
-
-DATABASE_URL = 'https://webdigsin-default-rtdb.asia-southeast1.firebasedatabase.app/'
