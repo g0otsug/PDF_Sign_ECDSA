@@ -148,15 +148,7 @@ def main():
 
                 st.write("Keys generated and saved to files")
 
-            with st.expander("Lihat Private Key"):
-                entered_password = st.text_input("Enter your password to view the Private Key", type="password")
-                if st.button("View Private Key") and verify_password(st.session_state.password, entered_password):
-                    st.code(st.session_state.private_pem.decode(), language="text")
-                
-            with st.expander("Lihat Public Key"):
-                entered_password = st.text_input("Enter your password to view the Public Key", type="password")
-                if st.button("View Public Key") and verify_password(st.session_state.password, entered_password):
-                    st.code(st.session_state.public_pem.decode(), language="text")
+            
 
             entered_password = st.text_input("Enter your password to download keys", type="password")
             if st.button("Download Private Key (.pem)") and verify_password(st.session_state.password, entered_password):
