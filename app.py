@@ -72,7 +72,6 @@ def save_key_to_database(uid, key_type, key_pem, key_period):
             'delete': True
         }
     })
-
 def get_keys_from_database(uid):
     ref = db.reference(f'keys/{uid}')
     return ref.get()
@@ -150,7 +149,7 @@ def main():
             st.write("- Document signing")
             st.write("- Document verification")
     
-    elif st.session_state.page == "app":
+   elif st.session_state.page == "app":
         st.title(f"Welcome, {st.session_state.email}")
         menu = ["Key Generation", "Key Storage", "Sign Document", "Verify Document", "Users", "Logout"]
         choice = st.sidebar.selectbox("Menu", menu)
