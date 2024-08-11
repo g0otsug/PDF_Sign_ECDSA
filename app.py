@@ -43,7 +43,7 @@ def save_key_to_database(uid, key_type, key_pem, key_period):
     # Current date (date of key generation)
     creation_date = datetime.now()
     # Expiration date is one year from creation date
-    expiration_date = creation_date + timedelta(days=365)
+    expiration_date = datetime.now() + timedelta(days=365)
     
     ref = db.reference(f'keys/{uid}')
     new_key_ref = ref.push()
@@ -51,7 +51,7 @@ def save_key_to_database(uid, key_type, key_pem, key_period):
         'type': key_type,
         'pem': key_pem.decode(),
         'period': key_period,
-        'creation_date': creation_date.strftime('%Y-%m-%d'),
+        'creation_date': datetime.now().strftime('%Y-%m-%d'),
         'expiration_date': expiration_date.strftime('%Y-%m-%d'),
         'actions': {
             'download': True,
