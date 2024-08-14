@@ -189,8 +189,9 @@ def main():
             st.subheader("Key Storage")
             keys_df = get_keys_table(st.session_state.user_uid)
             if keys_df is not None:
-                st.dataframe(keys_df[['No', 'Key Type', 'Key ID', 'Created At', 'Expired At']])
+                st.dataframe(keys_df[['No', 'Key Type', 'Key ID', 'Created At', 'Expired At', 'Actions']])
 
+                selected_key = st.selectbox("Select Key ID", keys_df['Key ID'].values)
                 action = st.radio("Action", ["View Key", "Delete Key"])
 
                 entered_password = st.text_input("Enter your password to proceed", type="password")
@@ -202,6 +203,7 @@ def main():
                 elif action == "Delete Key" and st.button("Delete") and verify_password(st.session_state.password, entered_password):
                     delete_key_from_database(st.session_state.user_uid, selected_key)
                     st.success(f"Key {selected_key} deleted")
+
                 elif not verify_password(st.session_state.password, entered_password) and (st.button("View") or st.button("Delete")):
                     st.error("Incorrect password. Please try again.")
 
