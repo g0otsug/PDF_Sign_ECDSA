@@ -189,9 +189,8 @@ def main():
             st.subheader("Key Storage")
             keys_df = get_keys_table(st.session_state.user_uid)
             if keys_df is not None:
-                st.dataframe(keys_df[['No', 'Key Type', 'Key ID', 'Created At', 'Expired At', 'Actions']])
+                st.dataframe(keys_df[['No', 'Key Type', 'Key ID', 'Created At', 'Expired At']])
 
-                selected_key = st.selectbox("Select Key ID", keys_df['Key ID'].values)
                 action = st.radio("Action", ["View Key", "Delete Key"])
 
                 entered_password = st.text_input("Enter your password to proceed", type="password")
