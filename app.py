@@ -40,7 +40,7 @@ def get_file_name(email, key_type):
     file_name = f"{key_type}_key_{user_name}.pem"
     return file_name
 
-def save_key_to_database(uid, key_type, key_pem, key_period):
+'''def save_key_to_database(uid, key_type, key_pem, key_period):
     ref = db.reference(f'keys/{uid}')
     new_key_ref = ref.push()
     new_key_ref.set({
@@ -52,7 +52,7 @@ def save_key_to_database(uid, key_type, key_pem, key_period):
             'view': True,
             'delete': True
         }
-    })
+    })'''
 def get_keys_table(uid):
     keys = get_keys_from_database(uid)
     if keys:
