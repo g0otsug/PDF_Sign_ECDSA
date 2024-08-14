@@ -199,7 +199,7 @@ def main():
                     if st.button(f"Delete {key_data['type']} Key"):
                         delete_key_from_database(st.session_state.user_uid, key_id)
                         st.success(f"{key_data['type']} Key deleted")'''
-        elif choice == "Key Storage":
+        if choice == "Key Storage":
             st.subheader("Key Storage")
             keys_df = get_keys_table(st.session_state.user_uid)
             if keys_df is not None:
