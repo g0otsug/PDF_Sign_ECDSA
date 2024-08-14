@@ -203,7 +203,7 @@ def main():
                 elif action == "Delete Key" and st.button("Delete") and verify_password(st.session_state.password, entered_password):
                     delete_key_from_database(st.session_state.user_uid, selected_key)
                     st.success(f"Key {selected_key} deleted")
-                elif not st.button("View") or st.button("View") and verify_password(st.session_state.password, entered_password):
+                elif not st.button("View") and verify_password(st.session_state.password, entered_password):
                         st.error("Incorrect password. Please try again.")
 
             else:
