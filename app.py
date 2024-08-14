@@ -189,23 +189,26 @@ def main():
             st.subheader("Key Storage")
             keys_df = get_keys_table(st.session_state.user_uid)
             if keys_df is not None:
-                st.dataframe(keys_df[['No', 'Key Type', 'Created At', 'Expired At', 'Actions']])
-                
+                st.dataframe(keys_df[['No', 'Key Type', 'Key ID', 'Created At', 'Expired At', 'Actions']])
+
                 selected_key = st.selectbox("Select Key ID", keys_df['Key ID'].values)
                 action = st.radio("Action", ["View Key", "Delete Key"])
 
-                if action == "View Key":
+                entered_password = st.text_input("Enter your password to proceed", type="password")
+                
+                if action == "View Key" and st.button("View") and verify_password(st.session_state.password, entered_password):
                     key_data = keys_df[keys_df['Key ID'] == selected_key].iloc[0]
                     st.code(get_keys_from_database(st.session_state.user_uid)[selected_key]['pem'], language="text")
 
-                elif action == "Delete Key":
-                    if st.button("Delete"):
-                        delete_key_from_database(st.session_state.user_uid, selected_key)
-                        st.success(f"Key {selected_key} deleted")
-                        st.experimental_rerun()
+                elif action == "Delete Key" and st.button("Delete") and verify_password(st.session_state.password, entered_password):
+                    delete_key_from_database(st.session_state.user_uid, selected_key)
+                    st.success(f"Key {selected_key} deleted")
+                    st.experimental_rerun()
+                elif not verify_password(st.session_state.password, entered_password) and (st.button("View") or st.button("Delete")):
+                    st.error("Incorrect password. Please try again.")
+
             else:
                 st.warning("No keys available.")
-
         elif choice == "Sign Document":
             st.subheader("Sign Document")
             pdf_file = st.file_uploader("Upload PDF Document", type=["pdf"])
