@@ -206,7 +206,7 @@ def main():
 
                 elif not verify_password(st.session_state.password, entered_password) and st.button("View"):
                     st.error("Incorrect password. Please try again.")
-                    elif not verify_password(st.session_state.password, entered_password) and st.button("Delete"):
+                elif not verify_password(st.session_state.password, entered_password) and st.button("Delete"):
                     st.error("Incorrect password. Please try again.")
 
             else:
