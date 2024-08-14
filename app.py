@@ -5,6 +5,8 @@ from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 import hashlib
+import pandas as pd
+from datetime import datetime, timedelta
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -51,7 +53,26 @@ def save_key_to_database(uid, key_type, key_pem, key_period):
             'delete': True
         }
     })
+def get_keys_table(uid):
+    keys = get_keys_from_database(uid)
+    if keys:
+        key_data_list = []
+        for idx, (key_id, key_data) in enumerate(keys.items(), 1):
+            created_at = datetime.now()
+            expired_at = created_at + timedelta(days=365)
+            key_data_list.append({
+                'No': idx,
+                'Key Type': key_data['type'],
+                'Key ID': key_id,
+                'Created At': created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                'Expired At': expired_at.strftime("%Y-%m-%d %H:%M:%S"),
+                'Actions': key_data['type']
+            })
 
+        df = pd.DataFrame(key_data_list)
+        return df
+    else:
+        return None
 def get_keys_from_database(uid):
     ref = db.reference(f'keys/{uid}')
     return ref.get()
@@ -163,7 +184,7 @@ def main():
                 save_key_to_database(st.session_state.user_uid, 'public', st.session_state.public_pem, '1 year')
                 st.success("Keys saved to database")
 
-        elif choice == "Key Storage":
+        '''elif choice == "Key Storage":
             st.subheader("Key Storage")
             keys = get_keys_from_database(st.session_state.user_uid)
             if keys:
@@ -177,7 +198,27 @@ def main():
                         st.code(key_data['pem'], language="text")
                     if st.button(f"Delete {key_data['type']} Key"):
                         delete_key_from_database(st.session_state.user_uid, key_id)
-                        st.success(f"{key_data['type']} Key deleted")
+                        st.success(f"{key_data['type']} Key deleted")'''
+        elif choice == "Key Storage":
+            st.subheader("Key Storage")
+            keys_df = get_keys_table(st.session_state.user_uid)
+            if keys_df is not None:
+                st.dataframe(keys_df[['No', 'Key Type', 'Created At', 'Expired At']])
+                
+                selected_key = st.selectbox("Select Key ID", keys_df['Key ID'].values)
+                action = st.radio("Action", ["View Key", "Delete Key"])
+
+                if action == "View Key":
+                    key_data = keys_df[keys_df['Key ID'] == selected_key].iloc[0]
+                    st.code(get_keys_from_database(st.session_state.user_uid)[selected_key]['pem'], language="text")
+
+                elif action == "Delete Key":
+                    if st.button("Delete"):
+                        delete_key_from_database(st.session_state.user_uid, selected_key)
+                        st.success(f"Key {selected_key} deleted")
+                        st.experimental_rerun()
+            else:
+                st.warning("No keys available.")
 
         elif choice == "Sign Document":
             st.subheader("Sign Document")
