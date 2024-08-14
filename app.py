@@ -204,7 +204,7 @@ def main():
                     delete_key_from_database(st.session_state.user_uid, selected_key)
                     st.success(f"Key {selected_key} deleted")
 
-                elif not verify_password(st.session_state.password, entered_password):
+                elif not verify_password(st.session_state.password, entered_password) and (st.button("View") or st.button("Delete")):
                     st.error("Incorrect password. Please try again.")
 
             else:
