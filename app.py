@@ -5,7 +5,7 @@ from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 import hashlib
-from datetime import datetime, timedelta
+from time
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -41,9 +41,10 @@ def get_file_name(email, key_type):
 
 def save_key_to_database(uid, key_type, key_pem, key_period):
     # Current date (date of key generation)
-    creation_date = datetime.now()
+    creation_date = time.strftime('%Y-%m-%d', time.localtime())
     # Expiration date is one year from creation date
-    expiration_date = datetime.now() + timedelta(days=365)
+    expiration_timestamp = time.time() + (365 * 24 * 60 * 60)
+    expiration_date = time.strftime('%Y-%m-%d', time.localtime(expiration_timestamp))
     
     ref = db.reference(f'keys/{uid}')
     new_key_ref = ref.push()
@@ -51,14 +52,15 @@ def save_key_to_database(uid, key_type, key_pem, key_period):
         'type': key_type,
         'pem': key_pem.decode(),
         'period': key_period,
-        'creation_date': datetime.now().strftime('%Y-%m-%d'),
-        'expiration_date': expiration_date.strftime('%Y-%m-%d'),
+        'creation_date': creation_date,
+        'expiration_date': expiration_date,
         'actions': {
             'download': True,
             'view': True,
             'delete': True
         }
     })
+
 
 def get_keys_from_database(uid):
     ref = db.reference(f'keys/{uid}')
