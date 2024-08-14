@@ -5,7 +5,6 @@ from firebase_config import cred
 from ecdsa import SigningKey, VerifyingKey
 from ecdsa_script import generate_keys, sign_document, verify_signature, save_key_to_file, read_key_from_file
 import hashlib
-import time
 
 # Initialize Firebase
 if not firebase_admin._apps:
@@ -40,31 +39,18 @@ def get_file_name(email, key_type):
     return file_name
 
 def save_key_to_database(uid, key_type, key_pem, key_period):
-    # Current date (date of key generation)
-    creation_date = time.strftime('%Y-%m-%d', time.localtime())
-    # Expiration date is one year from creation date
-    expiration_timestamp = time.time() + (365 * 24 * 60 * 60)
-    expiration_date = time.strftime('%Y-%m-%d', time.localtime(expiration_timestamp))
-    
     ref = db.reference(f'keys/{uid}')
     new_key_ref = ref.push()
     new_key_ref.set({
         'type': key_type,
         'pem': key_pem.decode(),
         'period': key_period,
-        'creation_date': creation_date,
-        'expiration_date': expiration_date,
         'actions': {
             'download': True,
             'view': True,
             'delete': True
         }
     })
-
-
-def get_keys_from_database(uid):
-    ref = db.reference(f'keys/{uid}')
-    return ref.get()
 
 def get_keys_from_database(uid):
     ref = db.reference(f'keys/{uid}')
@@ -185,8 +171,6 @@ def main():
                     st.write(f"Key ID: {key_id}")
                     st.write(f"Key Type: {key_data['type']}")
                     st.write(f"Key Period: {key_data['period']}")
-                    st.write(f"Creation Date: {key_data['creation_date']}")
-                    st.write(f"Expiration Date: {key_data['expiration_date']}")
                     if st.button(f"Download {key_data['type']} Key"):
                         st.download_button("Download Key", key_data['pem'], file_name=f"{key_data['type']}_key_{st.session_state.email}.pem")
                     if st.button(f"View {key_data['type']} Key"):
