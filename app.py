@@ -184,21 +184,7 @@ def main():
                 save_key_to_database(st.session_state.user_uid, 'public', st.session_state.public_pem, '1 year')
                 st.success("Keys saved to database")
 
-        '''elif choice == "Key Storage":
-            st.subheader("Key Storage")
-            keys = get_keys_from_database(st.session_state.user_uid)
-            if keys:
-                for key_id, key_data in keys.items():
-                    st.write(f"Key ID: {key_id}")
-                    st.write(f"Key Type: {key_data['type']}")
-                    st.write(f"Key Period: {key_data['period']}")
-                    if st.button(f"Download {key_data['type']} Key"):
-                        st.download_button("Download Key", key_data['pem'], file_name=f"{key_data['type']}_key_{st.session_state.email}.pem")
-                    if st.button(f"View {key_data['type']} Key"):
-                        st.code(key_data['pem'], language="text")
-                    if st.button(f"Delete {key_data['type']} Key"):
-                        delete_key_from_database(st.session_state.user_uid, key_id)
-                        st.success(f"{key_data['type']} Key deleted")'''
+        
         if choice == "Key Storage":
             st.subheader("Key Storage")
             keys_df = get_keys_table(st.session_state.user_uid)
