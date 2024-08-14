@@ -180,8 +180,6 @@ def main():
                 st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name=file_name)
 
             if st.button("Save Keys to Database"):
-                save_key_to_database(st.session_state.user_uid, 'private', st.session_state.private_pem, '1 year')
-                save_key_to_database(st.session_state.user_uid, 'public', st.session_state.public_pem, '1 year')
                 st.success("Keys saved to database")
 
         
