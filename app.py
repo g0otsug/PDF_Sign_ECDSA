@@ -40,7 +40,7 @@ def get_file_name(email, key_type):
     file_name = f"{key_type}_key_{user_name}.pem"
     return file_name
 
-'''def save_key_to_database(uid, key_type, key_pem, key_period):
+def save_key_to_database(uid, key_type, key_pem, key_period):
     ref = db.reference(f'keys/{uid}')
     new_key_ref = ref.push()
     new_key_ref.set({
@@ -52,7 +52,7 @@ def get_file_name(email, key_type):
             'view': True,
             'delete': True
         }
-    })'''
+    })
 def get_keys_table(uid):
     keys = get_keys_from_database(uid)
     if keys:
@@ -180,6 +180,8 @@ def main():
                 st.download_button("Download Public Key (.pem)", st.session_state.public_pem, file_name=file_name)
 
             if st.button("Save Keys to Database"):
+                save_key_to_database(st.session_state.user_uid, 'private', st.session_state.private_pem, '1 year')
+                save_key_to_database(st.session_state.user_uid, 'public', st.session_state.public_pem, '1 year')
                 st.success("Keys saved to database")
 
         
