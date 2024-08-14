@@ -199,14 +199,14 @@ def main():
                 if action == "View Key" and st.button("View") and verify_password(st.session_state.password, entered_password):
                     key_data = keys_df[keys_df['Key ID'] == selected_key].iloc[0]
                     st.code(get_keys_from_database(st.session_state.user_uid)[selected_key]['pem'], language="text")
-                else:
-                    st.error("Incorrect password. Please try again.")
+                    else:
+                        st.error("Incorrect password. Please try again.")
 
                 if action == "Delete Key" and st.button("Delete") and verify_password(st.session_state.password, entered_password):
                     delete_key_from_database(st.session_state.user_uid, selected_key)
                     st.success(f"Key {selected_key} deleted")
-                else:
-                    st.error("Incorrect password. Please try again.")
+                    else:
+                        st.error("Incorrect password. Please try again.")
 
             else:
                 st.warning("No keys available.")
