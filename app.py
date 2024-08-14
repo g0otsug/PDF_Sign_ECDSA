@@ -189,7 +189,7 @@ def main():
             st.subheader("Key Storage")
             keys_df = get_keys_table(st.session_state.user_uid)
             if keys_df is not None:
-                st.dataframe(keys_df[['No', 'Key Type', 'Created At', 'Expired At']])
+                st.dataframe(keys_df[['No', 'Key Type', 'Created At', 'Expired At', 'Actions']])
                 
                 selected_key = st.selectbox("Select Key ID", keys_df['Key ID'].values)
                 action = st.radio("Action", ["View Key", "Delete Key"])
