@@ -232,7 +232,7 @@ def main():
                 public_key = VerifyingKey.from_pem(public_key_pem)
                 signature = signature_file.read()
                 result = verify_signature(public_key, document, signature)
-                st.write("Signature verifies" if result else "Signature does not verify")
+                st.success("Signature verifies" if result else "Signature does not verify")
 
         elif choice == "Users":
             st.subheader("Users")
