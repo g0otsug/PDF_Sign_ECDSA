@@ -89,7 +89,7 @@ def main():
 
     if st.session_state.page == "landing":
         st.title("Welcome to Signum")
-        st.write("Securely sign and verify your PDF documents.")
+        st.write("Securely sign and verify PDF documents in your group.")
         if st.button("Get Started"):
             st.session_state.page = "home"
             if st.button("Let's Go"):
