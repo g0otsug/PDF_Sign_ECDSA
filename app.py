@@ -82,13 +82,13 @@ def delete_key_from_database(uid, key_id):
     ref.delete()
 
 def main():
-    st.set_page_config(page_title="Sandi Berkas", page_icon=":lock:", layout="wide")
+    st.set_page_config(page_title="Signum", page_icon=":lock:", layout="wide")
 
     if 'page' not in st.session_state:
         st.session_state.page = "landing"
 
     if st.session_state.page == "landing":
-        st.title("Welcome to Sandi Berkas")
+        st.title("Welcome to Signum")
         st.write("Securely sign and verify your PDF documents.")
         if st.button("Get Started"):
             st.session_state.page = "home"
@@ -128,7 +128,7 @@ def main():
 
         elif choice == "Tutorial":
             st.subheader("Tutorial")
-            st.write("### Steps to use Sandi Berkas")
+            st.write("### Steps to use Signum")
             st.markdown("""
             1. **Sign Up**: Create a new account using your email and password.
             2. **Login**: Use your credentials to log in.
