@@ -96,7 +96,7 @@ def main():
                 st.experimental_rerun()
 
     elif st.session_state.page == "home":
-        st.title("Sandi Berkas - Home")
+        st.title("Signum - Home")
 
         menu = ["SignUp", "Login", "Tutorial", "About"]
         choice = st.sidebar.selectbox("Menu", menu)
@@ -139,8 +139,8 @@ def main():
             """)
 
         elif choice == "About":
-            st.subheader("About Sandi Berkas")
-            st.write("Sandi Berkas is a secure web application designed to help you sign and verify PDF documents using ECDSA.")
+            st.subheader("About Signum")
+            st.write("Signum is a secure web application designed to help you sign and verify PDF documents using ECDSA.")
             st.write("Features include:")
             st.write("- User authentication")
             st.write("- Key generation")
